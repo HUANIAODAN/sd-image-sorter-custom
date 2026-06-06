@@ -1,0 +1,388 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SD Image Sorter</title>
+  <script>
+    (() => {
+      const saved = localStorage.getItem('sd-sorter-theme');
+      if (saved === 'light' || saved === 'dark') {
+        document.documentElement.dataset.theme = saved;
+      }
+    })();
+  </script>
+  <link rel="stylesheet" href="/styles.css?v=21" />
+  <link rel="stylesheet" href="/vs-enhancements.css?v=21" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <div class="brand-mark"></div>
+      <div>
+        <h1>SD Image Sorter</h1>
+        <p>图库、Reader、Prompt Lab、Similar、Manual Sort 一体化工作台</p>
+      </div>
+      <span id="modelBadge" class="pill">自动标签引擎检测中...</span>
+    </div>
+    <div class="tabs-shell">
+      <nav class="tabs">
+        <button class="tab is-active" data-view="gallery">Gallery</button>
+        <button class="tab" data-view="reader">Image Reader</button>
+        <button class="tab" data-view="prompt-lab">Prompt Lab</button>
+        <button class="tab" data-view="similar">Similar</button>
+        <button class="tab" data-view="sorting">Manual Sort</button>
+      </nav>
+      <button id="themeToggleBtn" class="btn btn-ghost btn-small theme-toggle" type="button" title="切换主题">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+          <path d="M8 12a4 4 0 1 1 0-8 4 4 0 0 1 0 8zm0-1a3 3 0 1 0 0-6 3 3 0 0 0 0 6zm0-9a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-1 0v-1A.5.5 0 0 1 8 2zm0 11a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-1 0v-1a.5.5 0 0 1 .5-.5zM2.5 8a.5.5 0 0 1-.5-.5v-1a.5.5 0 0 1 1 0v1a.5.5 0 0 1-.5.5zm11 0a.5.5 0 0 1-.5-.5v-1a.5.5 0 0 1 1 0v1a.5.5 0 0 1-.5.5z"/>
+        </svg>
+      </button>
+    </div>
+  </header>
+
+  <main class="shell">
+    <section id="view-gallery" class="view is-active">
+      <div class="layout-three">
+        <aside class="panel scroll">
+          <section class="card">
+            <div class="card-head">
+              <h2>扫描图库</h2>
+              <span id="galleryStats" class="muted">0 张图片</span>
+            </div>
+            <input id="scanDir" type="text" placeholder="输入图库目录，例如 D:\images\sd" />
+            <div class="inline">
+              <label class="checkbox"><input id="scanRecursive" type="checkbox" checked /> 递归</label>
+              <input id="scanMax" type="number" min="1" placeholder="最大扫描数" />
+            </div>
+            <button id="scanBtn" class="btn btn-primary full">开始扫描</button>
+            <pre id="scanResult" class="console">等待扫描</pre>
+          </section>
+
+          <section class="card">
+            <div class="card-head">
+              <h2>高级筛选</h2>
+              <button id="resetFiltersBtn" class="btn btn-ghost btn-small">重置</button>
+            </div>
+            <input id="keyword" type="text" placeholder="关键词：文件名 / prompt / checkpoint / 路径" />
+            <input id="promptKeyword" type="text" placeholder="Prompt 关键词" />
+            <input id="filterTag" type="text" list="tagOptions" placeholder="标签，可用逗号分隔" />
+            <input id="filterGenerator" type="text" list="generatorOptions" placeholder="生成器：WebUI, Forge, ComfyUI..." />
+            <input id="filterContentRating" type="text" placeholder="内容分级：general, sensitive, questionable, explicit" />
+            <input id="filterCheckpoint" type="text" list="checkpointOptions" placeholder="Checkpoint，可用逗号分隔" />
+            <input id="filterLora" type="text" list="loraOptions" placeholder="LoRA，可用逗号分隔" />
+            <div class="two-col">
+              <input id="minRating" type="number" min="0" max="5" placeholder="最小星级" />
+              <input id="maxRating" type="number" min="0" max="5" placeholder="最大星级" />
+            </div>
+            <div class="two-col">
+              <input id="minWidth" type="number" min="1" placeholder="最小宽度" />
+              <input id="maxWidth" type="number" min="1" placeholder="最大宽度" />
+            </div>
+            <div class="two-col">
+              <input id="minHeight" type="number" min="1" placeholder="最小高度" />
+              <input id="maxHeight" type="number" min="1" placeholder="最大高度" />
+            </div>
+            <div class="two-col">
+              <select id="aspectRatio">
+                <option value="">长宽比：全部</option>
+                <option value="square">正方形</option>
+                <option value="landscape">横图</option>
+                <option value="portrait">竖图</option>
+              </select>
+              <select id="sortBy">
+                <option value="newest">排序：最新</option>
+                <option value="oldest">排序：最旧</option>
+                <option value="name_asc">文件名 A-Z</option>
+                <option value="name_desc">文件名 Z-A</option>
+                <option value="rating_desc">星级高到低</option>
+                <option value="prompt_length_desc">Prompt 长到短</option>
+                <option value="tag_count_desc">标签多到少</option>
+                <option value="generator_asc">生成器</option>
+                <option value="checkpoint_asc">Checkpoint</option>
+                <option value="size_desc">文件大小</option>
+              </select>
+            </div>
+            <button id="applyFilterBtn" class="btn btn-primary full">应用筛选</button>
+          </section>
+
+          <section class="card">
+            <h2>批量工具</h2>
+            <label class="checkbox"><input id="batchOnlyUntagged" type="checkbox" checked /> 仅自动打标未打标图片</label>
+            <div class="two-col">
+              <input id="batchGeneralThreshold" type="number" min="0" max="1" step="0.01" value="0.35" placeholder="General 阈值" />
+              <input id="batchCharacterThreshold" type="number" min="0" max="1" step="0.01" value="0.85" placeholder="Character 阈值" />
+            </div>
+            <button id="batchAutoTagBtn" class="btn btn-ghost full">批量自动标签</button>
+            <div class="progress">
+              <div id="batchProgressFill" class="progress-fill"></div>
+            </div>
+            <p id="batchProgressText" class="muted">暂无批量任务</p>
+            <hr />
+            <input id="batchMoveTargetDir" type="text" placeholder="批量移动目标目录" />
+            <select id="batchMoveStrategy">
+              <option value="flat">平铺</option>
+              <option value="first_tag">按首标签</option>
+              <option value="rating">按星级</option>
+              <option value="generator">按生成器</option>
+              <option value="content_rating">按内容分级</option>
+            </select>
+            <button id="batchMoveBtn" class="btn btn-primary full">按当前筛选批量移动</button>
+            <p id="batchMoveStatus" class="muted"></p>
+          </section>
+
+          <section class="card">
+            <h2>图库列表</h2>
+            <div id="galleryList" class="library-list"></div>
+          </section>
+        </aside>
+
+        <section class="panel scroll">
+          <div class="section-toolbar">
+            <div>
+              <strong id="pageInfo">第 1 / 1 页</strong>
+              <span id="resultSummary" class="muted">等待加载</span>
+            </div>
+            <div class="inline">
+              <button id="reloadBtn" class="btn btn-ghost">刷新</button>
+              <button id="prevPage" class="btn btn-ghost">上一页</button>
+              <button id="nextPage" class="btn btn-ghost">下一页</button>
+            </div>
+          </div>
+          <div id="imageGrid" class="image-grid"></div>
+        </section>
+
+        <aside class="panel scroll">
+          <section class="card compact">
+            <div class="card-head">
+              <h2>详情工作台</h2>
+              <span id="detailHint" class="muted">请选择图片</span>
+            </div>
+            <p id="detailStatus" class="status"></p>
+          </section>
+
+          <div class="preview">
+            <img id="detailPreview" alt="selected preview" />
+          </div>
+
+          <section class="card compact">
+            <h3 id="detailName">未选择图片</h3>
+            <p id="detailPath" class="muted">-</p>
+            <p id="detailMeta" class="muted">-</p>
+            <p id="detailModelMeta" class="muted">-</p>
+            <div id="detailBadges" class="badge-row"></div>
+          </section>
+
+          <section class="card compact">
+            <label class="field-label">Checkpoint</label>
+            <pre id="detailCheckpoint" class="code-box">(暂无)</pre>
+            <label class="field-label">LoRA</label>
+            <pre id="detailLora" class="code-box">(暂无)</pre>
+            <label class="field-label">Prompt</label>
+            <pre id="detailPrompt" class="code-box">(暂无)</pre>
+            <label class="field-label">Negative Prompt</label>
+            <pre id="detailNegative" class="code-box">(暂无)</pre>
+          </section>
+
+          <section class="card compact">
+            <label class="field-label">标签（逗号分隔）</label>
+            <input id="detailTagInput" type="text" placeholder="portrait, solo, best quality" />
+            <div class="two-col">
+              <input id="detailRatingInput" type="number" min="0" max="5" placeholder="星级 0-5" />
+              <button id="saveRatingBtn" class="btn btn-primary">保存星级</button>
+            </div>
+            <div class="button-row">
+              <button id="saveTagsBtn" class="btn btn-ghost">保存标签</button>
+              <button id="autoTagsBtn" class="btn btn-ghost">自动标签</button>
+              <button id="openSimilarBtn" class="btn btn-ghost">查相似图</button>
+            </div>
+            <label class="field-label">移动到目录</label>
+            <input id="detailTargetDir" type="text" placeholder="D:\sorted\keep" />
+            <select id="detailMoveStrategy">
+              <option value="flat">平铺</option>
+              <option value="first_tag">按首标签</option>
+              <option value="rating">按星级</option>
+              <option value="generator">按生成器</option>
+              <option value="content_rating">按内容分级</option>
+            </select>
+            <button id="moveBtn" class="btn btn-primary full">移动当前图片</button>
+          </section>
+        </aside>
+      </div>
+    </section>
+
+    <section id="view-reader" class="view">
+      <div class="layout-two">
+        <aside class="panel scroll">
+          <section class="card">
+            <h2>Image Reader</h2>
+            <p class="muted">拖拽图片或直接选择文件，不用先扫描图库。</p>
+            <label id="readerDropZone" class="drop-zone">
+              <input id="readerFileInput" type="file" accept="image/*" hidden />
+              <span>点击或拖拽图片到这里</span>
+            </label>
+            <p id="readerStatus" class="status"></p>
+          </section>
+          <div class="preview large">
+            <img id="readerPreview" alt="reader preview" />
+          </div>
+        </aside>
+        <section class="panel scroll">
+          <section class="card">
+            <h2 id="readerTitle">等待读取</h2>
+            <p id="readerInfo" class="muted">-</p>
+            <div id="readerBadges" class="badge-row"></div>
+          </section>
+          <section class="card">
+            <label class="field-label">Prompt</label>
+            <pre id="readerPrompt" class="code-box">(暂无)</pre>
+            <label class="field-label">Negative Prompt</label>
+            <pre id="readerNegative" class="code-box">(暂无)</pre>
+          </section>
+          <section class="card">
+            <label class="field-label">参数</label>
+            <pre id="readerParams" class="code-box">(暂无)</pre>
+            <label class="field-label">原始元数据</label>
+            <pre id="readerMetadata" class="code-box">(暂无)</pre>
+          </section>
+        </section>
+      </div>
+    </section>
+
+    <section id="view-prompt-lab" class="view">
+      <div class="layout-two">
+        <aside class="panel scroll">
+          <section class="card">
+            <div class="card-head">
+              <h2>Prompt Lab</h2>
+              <button id="reloadPromptLabBtn" class="btn btn-ghost btn-small">刷新库</button>
+            </div>
+            <div class="two-col">
+              <select id="promptQuality">
+                <option value="high">高质量预设</option>
+                <option value="medium">中质量预设</option>
+                <option value="none">不加质量预设</option>
+              </select>
+              <input id="promptCountTag" type="text" value="1girl" placeholder="count tag，例如 1girl" />
+            </div>
+            <label class="checkbox"><input id="promptIncludeNegative" type="checkbox" checked /> 自动生成负向 prompt</label>
+            <label class="checkbox"><input id="promptRandomize" type="checkbox" /> 用库里的标签随机补足</label>
+            <textarea id="promptSelectedTags" rows="8" placeholder="输入标签，逗号或换行分隔"></textarea>
+            <div class="button-row">
+              <button id="useCurrentImageTagsBtn" class="btn btn-ghost">带入当前图片标签</button>
+              <button id="generatePromptBtn" class="btn btn-primary">生成 Prompt</button>
+            </div>
+          </section>
+
+          <section class="card">
+            <h2>标签库</h2>
+            <div id="promptLabTags" class="chip-grid"></div>
+          </section>
+        </aside>
+
+        <section class="panel scroll">
+          <section class="card">
+            <h2>生成结果</h2>
+            <label class="field-label">正向 Prompt</label>
+            <textarea id="generatedPrompt" rows="10"></textarea>
+            <label class="field-label">负向 Prompt</label>
+            <textarea id="generatedNegative" rows="7"></textarea>
+            <p id="promptLabStatus" class="status"></p>
+          </section>
+          <section class="card">
+            <h2>库统计</h2>
+            <div id="promptLabLibrary" class="library-columns"></div>
+          </section>
+        </section>
+      </div>
+    </section>
+
+    <section id="view-similar" class="view">
+      <div class="layout-two">
+        <aside class="panel scroll">
+          <section class="card">
+            <h2>Similar Images</h2>
+            <p class="muted">用当前选中图片，或上传外部图片查图库近似图。</p>
+            <div class="button-row">
+              <button id="similarUseSelectedBtn" class="btn btn-primary">使用当前选中图片</button>
+              <label class="btn btn-ghost file-btn">
+                上传外部图片
+                <input id="similarFileInput" type="file" accept="image/*" hidden />
+              </label>
+            </div>
+            <p id="similarStatus" class="status"></p>
+          </section>
+          <div class="preview large">
+            <img id="similarSourcePreview" alt="similar source preview" />
+          </div>
+          <section class="card">
+            <h3>来源信息</h3>
+            <p id="similarSourceInfo" class="muted">-</p>
+            <p id="similarResultInfo" class="muted">-</p>
+          </section>
+        </aside>
+        <section class="panel scroll">
+          <section class="card">
+            <h2>相似结果</h2>
+            <div id="similarGrid" class="image-grid"></div>
+          </section>
+        </section>
+      </div>
+    </section>
+
+    <section id="view-sorting" class="view">
+      <div class="layout-two">
+        <aside class="panel scroll">
+          <section class="card">
+            <h2>分拣目录</h2>
+            <div class="folder-grid">
+              <label>W 目录<input id="sortFolderW" type="text" placeholder="W 目标目录" /></label>
+              <label>A 目录<input id="sortFolderA" type="text" placeholder="A 目标目录" /></label>
+              <label>S 目录<input id="sortFolderS" type="text" placeholder="S 目标目录" /></label>
+              <label>D 目录<input id="sortFolderD" type="text" placeholder="D 目标目录" /></label>
+            </div>
+            <div class="button-row" style="margin-top: 10px;">
+              <button id="startManualSortBtn" class="btn btn-primary">开始手动分拣</button>
+              <button id="clearManualSortBtn" class="btn btn-ghost">清空会话</button>
+            </div>
+            <div class="button-grid" style="margin-top: 10px;">
+              <button class="btn action-btn" data-sort-key="w">W</button>
+              <button class="btn action-btn" data-sort-key="a">A</button>
+              <button class="btn action-btn" data-sort-key="s">S</button>
+              <button class="btn action-btn" data-sort-key="d">D</button>
+            </div>
+            <div class="button-row" style="margin-top: 10px;">
+              <button id="manualSkipBtn" class="btn btn-ghost">Space 跳过</button>
+              <button id="manualUndoBtn" class="btn btn-ghost">Z 撤销</button>
+            </div>
+            <p id="manualSortStatus" class="status"></p>
+          </section>
+        </aside>
+        <section class="panel scroll">
+          <section class="card">
+            <h2 id="manualSortTitle">等待开始</h2>
+            <p id="manualSortInfo" class="muted">-</p>
+            <p id="manualSortProgress" class="muted">未开始</p>
+            <div id="manualSortTags" class="badge-row"></div>
+          </section>
+          <div class="preview giant">
+            <img id="manualSortPreview" alt="manual sort preview" />
+          </div>
+        </section>
+      </div>
+    </section>
+  </main>
+
+  <template id="thumbTemplate">
+    <button type="button" class="thumb-card">
+      <img class="thumb-image" alt="thumbnail" />
+      <div class="thumb-body">
+        <div class="thumb-name"></div>
+        <div class="thumb-meta"></div>
+      </div>
+    </button>
+  </template>
+
+  <script src="/app.js?v=13"></script>
+</body>
+</html>

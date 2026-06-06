@@ -1,0 +1,32 @@
+fastapi==0.116.1
+uvicorn==0.34.2
+sqlalchemy==2.0.41
+pydantic==2.11.4
+Pillow==11.2.1
+numpy>=1.26,<3
+onnxruntime>=1.17,<2
+python-multipart>=0.0.6
+
+# 新增功能依赖
+# CLIP 相似度搜索
+transformers>=4.30.0
+torch>=2.0.0
+torchvision>=0.15.0
+
+# 美学评分
+opencv-python>=4.8.0
+
+# 图片加密
+cryptography>=41.0.0
+
+# YOLO 检测（用于打码编辑）
+ultralytics>=8.0.0
+
+# 画师识别
+timm>=0.9.0
+
+# WD14 模型下载
+huggingface-hub>=0.20.0
+
+# 向量数据库（可选，用于加速 CLIP 搜索）
+# faiss-cpu>=1.7.4

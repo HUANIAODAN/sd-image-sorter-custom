@@ -1,0 +1,213 @@
+/* Visual Studio Enhanced Styles - Additional refinements */
+
+/* Input focus states with VS-style glow */
+input:focus,
+select:focus,
+textarea:focus {
+  background: var(--input-bg);
+  box-shadow: 0 0 0 1px var(--focus-border);
+}
+
+/* Refined button states */
+.btn:active:not(:disabled),
+.btn-primary:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+/* Status bar enhancements */
+.brand p {
+  font-weight: 400;
+  opacity: 0.8;
+}
+
+/* Better visual hierarchy for cards */
+.card:last-child {
+  border-bottom: none;
+}
+
+/* Enhanced pill styling */
+.pill {
+  background: var(--accent-soft);
+  color: var(--accent);
+  border-color: var(--accent-soft);
+  font-weight: 500;
+}
+
+/* Smooth transitions for interactive elements */
+.tab,
+.btn,
+.file-btn,
+.chip,
+.thumb-card,
+.library-item {
+  will-change: background-color, border-color;
+}
+
+/* Better spacing for card content */
+.card > *:first-child {
+  margin-top: 0;
+}
+
+.card > *:last-child {
+  margin-bottom: 0;
+}
+
+/* Input group styling */
+.card input + input,
+.card input + select,
+.card select + input,
+.card input + .inline,
+.card input + .two-col,
+.card .two-col + input {
+  margin-top: 8px;
+}
+
+/* Better visual feedback for disabled states */
+input:disabled,
+select:disabled,
+textarea:disabled {
+  background: var(--surface-3);
+  color: var(--muted);
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+/* Hover effects for interactive cards */
+.library-item strong {
+  color: var(--text);
+}
+
+.library-item .muted {
+  font-size: 12px;
+  line-height: 1.5;
+  margin-top: 4px;
+}
+
+/* Enhanced scrollbar for code blocks */
+.console::-webkit-scrollbar,
+.code-box::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+.console::-webkit-scrollbar-thumb,
+.code-box::-webkit-scrollbar-thumb {
+  border-width: 2px;
+}
+
+/* Better alignment for inline elements */
+.inline > * {
+  align-self: center;
+}
+
+/* Enhanced badge contrast */
+.badge {
+  font-weight: 500;
+}
+
+/* Refinements for thumbnail grid */
+.thumb-body {
+  padding: 8px;
+}
+
+/* Better visual separation */
+.section-toolbar + .image-grid {
+  padding-top: 12px;
+}
+
+/* Enhanced focus states for accessibility */
+.chip:focus-visible {
+  outline: 2px solid var(--focus-border);
+  outline-offset: 2px;
+}
+
+/* Improved preview image rendering */
+.preview img {
+  image-rendering: high-quality;
+  image-rendering: -webkit-optimize-contrast;
+}
+
+/* Better text rendering */
+body {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+/* VS Code-style activity bar accent */
+.tab.is-active::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -1px;
+  height: 2px;
+  background: var(--accent);
+}
+
+/* Enhanced button group spacing */
+.button-row .btn,
+.button-row .file-btn {
+  min-height: 28px;
+}
+
+/* Better visual weight for headings */
+.card h2,
+.card h3 {
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+
+/* Subtle hover effect for preview areas */
+.preview:hover {
+  background: var(--surface-hover);
+}
+
+/* Improved chip grid layout */
+.chip-grid {
+  align-items: center;
+}
+
+/* Better contrast for muted text */
+.muted {
+  font-size: 12px;
+}
+
+/* Enhanced library columns */
+.library-col button {
+  justify-content: flex-start;
+  text-align: left;
+  padding: 6px 10px;
+}
+
+/* Status indicator colors */
+.status:not(.is-error) {
+  color: var(--info);
+}
+
+/* Refined action button styling */
+.action-btn {
+  font-weight: 500;
+  letter-spacing: 0.5px;
+}
+
+/* Better visual separation in panels */
+.scroll {
+  scrollbar-gutter: stable;
+}
+
+/* Enhanced drop zone feedback */
+.drop-zone span {
+  pointer-events: none;
+  user-select: none;
+}
+
+/* Improved table-like layout for folder grid */
+.folder-grid label input {
+  margin-top: 4px;
+}
+
+/* JavaScript waterfall layout support - no additional CSS needed */
+.image-grid .thumb-card {
+  transition: all 0.3s ease;
+}
